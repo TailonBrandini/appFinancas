@@ -1,68 +1,57 @@
-import React, { useEffect } from "react";
+import React from "react";
 import { View, Text, StyleSheet, TextInput, TouchableOpacity } from "react-native";
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Animatable from 'react-native-animatable';
 import { useNavigation } from '@react-navigation/native';
 
-export default function SignIn() {
+export default function SignUp() {
 
   const [username, setUsername] = React.useState('');
   const [password, setPassword] = React.useState('');
+  const [confirmPassword, setConfirmPassword] = React.useState('');
+  const [email, setEmail] = React.useState('');
   const [message, setMessage] = React.useState('');
   const navigation = useNavigation();
 
-  useEffect(() => {
-    // Checar se o usuário já está logado
-    const checkLoggedInUser = async () => {
+  const handleSignUp = async () => {
+    if (email === '' || username === '' || password === '' || confirmPassword === '') {
+      setMessage('Preencha todos os campos.');
+    } else if (password !== confirmPassword) {
+      setMessage('As senhas não coincidem.');
+    } else {
       try {
-        const user = await AsyncStorage.getItem('user');
-        if (user) {
-          const userData = JSON.parse(user);
-          if (userData.username && userData.password) {
-            // Navegar automaticamente para a tela principal se o usuário estiver logado
-            navigation.navigate('Begin');
-          }
-        }
+        const userData = { email, username, password };
+        await AsyncStorage.setItem('user', JSON.stringify(userData));
+        setMessage('Cadastro realizado com sucesso!');
+        setEmail('');
+        setUsername('');
+        setPassword('');
+        setConfirmPassword('');
+        navigation.navigate('SignIn');
       } catch (error) {
-        console.error('Erro ao verificar dados do usuário:', error);
+        console.error('Erro ao salvar os dados: ', error);
       }
-    };
-    checkLoggedInUser();
-  }, [navigation]);
-
-  const handleLogin = async () => {
-    try {
-      const user = await AsyncStorage.getItem('user');
-      if (user) {
-        const userData = JSON.parse(user);
-        if (username === userData.username && password === userData.password) {
-          setMessage('Você será logado em breve!');
-          setUsername('');
-          setPassword('');
-          navigation.navigate('Begin');
-        } else if (username === '' || password === '') {
-          setMessage('Email ou Senha não preenchido(s)');
-        } else {
-          setMessage('Email ou Senha incorretos!');
-        }
-      } else {
-        setMessage('Nenhuma conta cadastrada.');
-      }
-    } catch (error) {
-      console.error('Erro ao fazer login:', error);
     }
   };
 
   return (
     <View style={styles.container}>
       <Animatable.View animation="fadeInLeft" delay={500} style={styles.containerHeader}>
-        <Text style={styles.message}>Seja bem vindo(a)</Text>
+        <Text style={styles.message}>Crie sua conta</Text>
       </Animatable.View>
 
       <Animatable.View animation="fadeInUp" style={styles.containerForm}>
-        <Text style={styles.title}>Usuário</Text>
+        <Text style={styles.title}>Email</Text>
         <TextInput
-          placeholder="Digite um email..."
+          placeholder="Digite seu email..."
+          style={styles.input}
+          value={email}
+          onChangeText={setEmail}
+        />
+
+        <Text style={styles.title}>Nome de usuário</Text>
+        <TextInput
+          placeholder="Digite um nome de usuário..."
           style={styles.input}
           value={username}
           onChangeText={setUsername}
@@ -70,23 +59,32 @@ export default function SignIn() {
 
         <Text style={styles.title}>Senha</Text>
         <TextInput
-          placeholder="Sua senha..."
+          placeholder="Digite sua senha..."
           style={styles.input}
           value={password}
           onChangeText={setPassword}
           secureTextEntry={true}
         />
 
-        <TouchableOpacity style={styles.button} onPress={handleLogin}>
-          <Text style={styles.buttonText}>Acessar</Text>
+        <Text style={styles.title}>Confirme sua senha</Text>
+        <TextInput
+          placeholder="Confirme sua senha..."
+          style={styles.input}
+          value={confirmPassword}
+          onChangeText={setConfirmPassword}
+          secureTextEntry={true}
+        />
+
+        <TouchableOpacity style={styles.button} onPress={handleSignUp}>
+          <Text style={styles.buttonText}>Cadastrar</Text>
         </TouchableOpacity>
 
         <View style={styles.messageButton}>
-          {message !== "" ? (<Text>{message}</Text>) : (<Text></Text>)}
+          {message != "" ? (<Text>{message}</Text>) : (<Text></Text>)}
         </View>
 
-        <TouchableOpacity style={styles.buttonRegister} onPress={() => navigation.navigate('SignUp')}>
-          <Text style={styles.registerText}>Não possui uma conta? Cadastre-se</Text>
+        <TouchableOpacity style={styles.buttonRegister} onPress={() => navigation.navigate('SignIn')}>
+          <Text style={styles.registerText}>Já possui uma conta? Faça login</Text>
         </TouchableOpacity>
       </Animatable.View>
     </View>
